@@ -56,8 +56,11 @@ allBtn.addEventListener("click", function () {
 });
 
 addExpense.addEventListener("click", function () {
-  // CHECK IF ONE OF THE INPUT IS EMPTY => EXIT
-  if (!expenseTitle.value || !expenseAmount.value) return;
+  // CHECK IF ONE OF THE INPUT IS EMPTY OR INVALID => EXIT
+  if (!expenseTitle.value || !expenseAmount.value || +expenseAmount.value <= 0) {
+    alert("Please enter a valid positive amount");
+    return;
+  }
 
   // ADD INPUTs TO ENTRY_LIST
   let expense = {
@@ -72,8 +75,11 @@ addExpense.addEventListener("click", function () {
 });
 
 addIncome.addEventListener("click", function () {
-  // CHECK IF ONE OF THE INPUT IS EMPTY => EXIT
-  if (!incomeTitle.value || !incomeAmount.value) return;
+  // CHECK IF ONE OF THE INPUT IS EMPTY OR INVALID => EXIT
+  if (!incomeTitle.value || !incomeAmount.value || +incomeAmount.value <= 0) {
+    alert("Please enter a valid positive amount");
+    return;
+  }
 
   // ADD INPUTs TO ENTRY_LIST
   let income = {
@@ -91,14 +97,14 @@ incomeList.addEventListener("click", deleteOrEdit);
 expenseList.addEventListener("click", deleteOrEdit);
 allList.addEventListener("click", deleteOrEdit);
 
-// HELEPER FUNCS
+// HELPER FUNCS
 function deleteOrEdit(event) {
   const targetBtn = event.target;
   const entry = targetBtn.parentNode;
 
-  if (targetBtn.id == EDIT) {
+  if (targetBtn.id === EDIT) {
     editEntry(entry);
-  } else if (targetBtn.id == DELETE) {
+  } else if (targetBtn.id === DELETE) {
     deleteEntry(entry);
   }
 }
@@ -129,16 +135,16 @@ function updateUI() {
   let sign = income >= outcome ? "$" : "-$";
 
   //UPDATE UI
-  balanceEl.innerHTML = `<small>${sign}</small>${balance}`;
-  outcomeTotalEl.innerHTML = `<small>$</small>${outcome}`;
-  incomeTotalEl.innerHTML = `<small>$</small>${income}`;
+  balanceEl.textContent = `${sign}${balance}`;
+  outcomeTotalEl.textContent = `$${outcome}`;
+  incomeTotalEl.textContent = `$${income}`;
 
   clearElement([expenseList, incomeList, allList]);
 
   ENTRY_LIST.forEach((entry, index) => {
-    if (entry.type == "expense") {
+    if (entry.type === "expense") {
       showEntry(expenseList, entry.type, entry.title, entry.amount, index);
-    } else if (entry.type == "income") {
+    } else if (entry.type === "income") {
       showEntry(incomeList, entry.type, entry.title, entry.amount, index);
     }
     showEntry(allList, entry.type, entry.title, entry.amount, index);
@@ -149,12 +155,16 @@ function updateUI() {
 
 function showEntry(list, type, title, amount, id) {
   const entry = `<li id="${id}" class="${type}">
-                    <div class="entry">${title} : $${amount}</div>
-                    <div id="edit"></div>
-                    <div id="delete"></div>
+                    <div class="entry"></div>
+                    <button id="edit" aria-label="Edit ${title}"></button>
+                    <button id="delete" aria-label="Delete ${title}"></button>
                   </li>`;
   const position = "afterbegin";
   list.insertAdjacentHTML(position, entry);
+
+  // Use textContent to prevent XSS
+  const entryDiv = list.querySelector(`li[id="${id}"] .entry`);
+  entryDiv.textContent = `${title} : $${amount}`;
 }
 
 function clearElement(elements) {
