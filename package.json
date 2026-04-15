@@ -1,0 +1,52 @@
+{
+  "name": "budget-app",
+  "version": "1.0.0",
+  "description": "A budget management application to track income, expenses, and overall budget with i18n support and accessibility features.",
+  "main": "budget.js",
+  "scripts": {
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --coverage --ci"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sptin2002/Budget-app.git"
+  },
+  "keywords": ["budget", "finance", "expense-tracker", "income-tracker"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sptin2002/Budget-app/issues"
+  },
+  "homepage": "https://github.com/sptin2002/Budget-app#readme",
+  "devDependencies": {
+    "@jest/globals": "^30.3.0",
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0",
+    "jsdom": "^29.0.2"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    },
+    "collectCoverageFrom": [
+      "*.js",
+      "!node_modules/**",
+      "!coverage/**",
+      "!jest.config.js",
+      "!*.test.js"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/coverage/",
+      "cookie-config.js"
+    ]
+  }
+}
