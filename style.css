@@ -474,3 +474,52 @@ input[type="number"] {
   width: 1.4em;
   height: 1.4em;
 }
+
+/* Language Switcher */
+.language-switcher {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  gap: 10px;
+}
+
+.lang-btn {
+  background-color: #2a0355;
+  color: #fff;
+  border: 2px solid #fff;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: "Gilroy Bold";
+  font-size: 0.9em;
+  transition: all 0.3s ease;
+}
+
+.lang-btn:hover {
+  background-color: #3d0a6f;
+  transform: scale(1.05);
+}
+
+.lang-btn.active {
+  background-color: #fff;
+  color: #2a0355;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 20px;
+  margin-top: 30px;
+}
+
+.footer a {
+  color: #fff;
+  text-decoration: underline;
+  font-size: 0.9em;
+}
+
+.footer a:hover {
+  opacity: 0.8;
+}
