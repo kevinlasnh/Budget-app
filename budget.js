@@ -58,7 +58,7 @@ allBtn.addEventListener("click", function () {
 addExpense.addEventListener("click", function () {
   // CHECK IF ONE OF THE INPUT IS EMPTY OR INVALID => EXIT
   if (!expenseTitle.value || !expenseAmount.value || +expenseAmount.value <= 0) {
-    alert("Please enter a valid positive amount");
+    alert(typeof t !== 'undefined' ? t('validationError') : "Please enter a valid positive amount");
     return;
   }
 
@@ -77,7 +77,7 @@ addExpense.addEventListener("click", function () {
 addIncome.addEventListener("click", function () {
   // CHECK IF ONE OF THE INPUT IS EMPTY OR INVALID => EXIT
   if (!incomeTitle.value || !incomeAmount.value || +incomeAmount.value <= 0) {
-    alert("Please enter a valid positive amount");
+    alert(typeof t !== 'undefined' ? t('validationError') : "Please enter a valid positive amount");
     return;
   }
 
