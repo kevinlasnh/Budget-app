@@ -1,0 +1,10 @@
+node_modules/
+coverage/
+.DS_Store
+*.log
+.env
+.vscode/
+.idea/
+dist/
+build/
+lighthouse-report.json

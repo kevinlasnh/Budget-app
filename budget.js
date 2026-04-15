@@ -1,212 +1,384 @@
-//SELECT ELEMENTS
-const balanceEl = document.querySelector(".balance .value");
-const incomeTotalEl = document.querySelector(".income-total");
-const outcomeTotalEl = document.querySelector(".outcome-total");
-const incomeEl = document.querySelector("#income");
-const expenseEl = document.querySelector("#expense");
-const allEl = document.querySelector("#all");
-const incomeList = document.querySelector("#income .list");
-const expenseList = document.querySelector("#expense .list");
-const allList = document.querySelector("#all .list");
-
-//SELECT BUTTONS
-const expenseBtn = document.querySelector(".first-tab");
-const incomeBtn = document.querySelector(".second-tab");
-const allBtn = document.querySelector(".third-tab");
-
-//INPUT BTS
-const addExpense = document.querySelector(".add-expense");
-const expenseTitle = document.getElementById("expense-title-input");
-const expenseAmount = document.getElementById("expense-amount-input");
-
-const addIncome = document.querySelector(".add-income");
-const incomeTitle = document.getElementById("income-title-input");
-const incomeAmount = document.getElementById("income-amount-input");
-
-//VARIABLES
-let ENTRY_LIST;
-let balance = 0,
-  income = 0,
-  outcome = 0;
-const DELETE = "delete",
-  EDIT = "edit";
-
-// LOOK IF THERE IS DATA IN LOCAL STORAGE
-ENTRY_LIST = JSON.parse(localStorage.getItem("entry_list")) || [];
-updateUI();
-
-//EVENT LISTENERS
-expenseBtn.addEventListener("click", function () {
-  show(expenseEl);
-  hide([incomeEl, allEl]);
-  active(expenseBtn);
-  inactive([incomeBtn, allBtn]);
-});
-incomeBtn.addEventListener("click", function () {
-  show(incomeEl);
-  hide([expenseEl, allEl]);
-  active(incomeBtn);
-  inactive([expenseBtn, allBtn]);
-});
-allBtn.addEventListener("click", function () {
-  show(allEl);
-  hide([incomeEl, expenseEl]);
-  active(allBtn);
-  inactive([incomeBtn, expenseBtn]);
-});
-
-addExpense.addEventListener("click", function () {
-  // CHECK IF ONE OF THE INPUT IS EMPTY OR INVALID => EXIT
-  if (!expenseTitle.value || !expenseAmount.value || +expenseAmount.value <= 0) {
-    alert(typeof t !== 'undefined' ? t('validationError') : "Please enter a valid positive amount");
+(function (root, factory) {
+  /* istanbul ignore else -- browser bootstrap is exercised in the real page */
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = factory(root);
     return;
+  } else {
+    const api = factory(root);
+    root.BudgetModule = api;
+    root.budgetApp = api.initBudgetApp({
+      document: root.document,
+      storage: root.localStorage,
+      updateChart: root.updateChart,
+      translate: root.t,
+      alertFn: root.alert,
+    });
+  }
+})(typeof globalThis !== "undefined" ? globalThis : this, function (root) {
+  const DELETE = "delete";
+  const EDIT = "edit";
+
+  function createEntry(type, title, amount) {
+    return {
+      type,
+      title,
+      amount: Number(amount),
+    };
   }
 
-  // ADD INPUTs TO ENTRY_LIST
-  let expense = {
-    type: "expense",
-    title: expenseTitle.value,
-    amount: +expenseAmount.value,
-  };
-  ENTRY_LIST.push(expense);
+  function validateEntry(title, amount) {
+    const normalizedTitle = typeof title === "string" ? title.trim() : "";
+    const numericAmount = Number(amount);
 
-  updateUI();
-  clearInput([expenseTitle, expenseAmount]);
-});
-
-addIncome.addEventListener("click", function () {
-  // CHECK IF ONE OF THE INPUT IS EMPTY OR INVALID => EXIT
-  if (!incomeTitle.value || !incomeAmount.value || +incomeAmount.value <= 0) {
-    alert(typeof t !== 'undefined' ? t('validationError') : "Please enter a valid positive amount");
-    return;
+    return {
+      isValid:
+        Boolean(normalizedTitle) &&
+        Number.isFinite(numericAmount) &&
+        numericAmount > 0,
+      title: normalizedTitle,
+      amount: numericAmount,
+    };
   }
 
-  // ADD INPUTs TO ENTRY_LIST
-  let income = {
-    type: "income",
-    title: incomeTitle.value,
-    amount: +incomeAmount.value,
-  };
-  ENTRY_LIST.push(income);
-
-  updateUI();
-  clearInput([incomeTitle, incomeAmount]);
-});
-
-incomeList.addEventListener("click", deleteOrEdit);
-expenseList.addEventListener("click", deleteOrEdit);
-allList.addEventListener("click", deleteOrEdit);
-
-// HELPER FUNCS
-function deleteOrEdit(event) {
-  const targetBtn = event.target;
-  const entry = targetBtn.parentNode;
-
-  if (targetBtn.id === EDIT) {
-    editEntry(entry);
-  } else if (targetBtn.id === DELETE) {
-    deleteEntry(entry);
-  }
-}
-
-function deleteEntry(entry) {
-  ENTRY_LIST.splice(entry.id, 1);
-  updateUI();
-}
-
-function editEntry(entry) {
-  const ENTRY = ENTRY_LIST[entry.id];
-
-  if (ENTRY.type == "income") {
-    incomeTitle.value = ENTRY.title;
-    incomeAmount.value = ENTRY.amount;
-  } else if (ENTRY.type == "expense") {
-    expenseTitle.value = ENTRY.title;
-    expenseAmount.value = ENTRY.amount;
-  }
-  deleteEntry(entry);
-}
-
-function updateUI() {
-  income = calculateTotal("income", ENTRY_LIST);
-  outcome = calculateTotal("expense", ENTRY_LIST);
-  balance = Math.abs(calculateBalance(income, outcome));
-
-  let sign = income >= outcome ? "$" : "-$";
-
-  //UPDATE UI
-  balanceEl.textContent = `${sign}${balance}`;
-  outcomeTotalEl.textContent = `$${outcome}`;
-  incomeTotalEl.textContent = `$${income}`;
-
-  clearElement([expenseList, incomeList, allList]);
-
-  ENTRY_LIST.forEach((entry, index) => {
-    if (entry.type === "expense") {
-      showEntry(expenseList, entry.type, entry.title, entry.amount, index);
-    } else if (entry.type === "income") {
-      showEntry(incomeList, entry.type, entry.title, entry.amount, index);
+  function loadEntries(storage) {
+    if (!storage || typeof storage.getItem !== "function") {
+      return [];
     }
-    showEntry(allList, entry.type, entry.title, entry.amount, index);
-  });
-  updateChart(income, outcome);
-  localStorage.setItem("entry_list", JSON.stringify(ENTRY_LIST));
-}
 
-function showEntry(list, type, title, amount, id) {
-  const entry = `<li id="${id}" class="${type}">
-                    <div class="entry"></div>
-                    <button id="edit" aria-label="Edit ${title}"></button>
-                    <button id="delete" aria-label="Delete ${title}"></button>
-                  </li>`;
-  const position = "afterbegin";
-  list.insertAdjacentHTML(position, entry);
-
-  // Use textContent to prevent XSS
-  const entryDiv = list.querySelector(`li[id="${id}"] .entry`);
-  entryDiv.textContent = `${title} : $${amount}`;
-}
-
-function clearElement(elements) {
-  elements.forEach((element) => {
-    element.innerHTML = "";
-  });
-}
-
-function calculateTotal(type, list) {
-  let sum = 0;
-  list.forEach((entry) => {
-    if (entry.type == type) {
-      sum += entry.amount;
+    try {
+      const rawValue = storage.getItem("entry_list");
+      const parsed = rawValue ? JSON.parse(rawValue) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
     }
-  });
-  return sum;
-}
+  }
 
-function calculateBalance(income, outcome) {
-  return income - outcome;
-}
-function clearInput(inputs) {
-  inputs.forEach((input) => {
-    input.value = "";
-  });
-}
+  function saveEntries(storage, entries) {
+    if (storage && typeof storage.setItem === "function") {
+      storage.setItem("entry_list", JSON.stringify(entries));
+    }
+  }
 
-function show(element) {
-  element.classList.remove("hide");
-}
+  function calculateTotal(type, list) {
+    let sum = 0;
 
-function hide(elements) {
-  elements.forEach((element) => {
-    element.classList.add("hide");
-  });
-}
+    list.forEach(function (entry) {
+      if (entry.type === type) {
+        sum += Number(entry.amount) || 0;
+      }
+    });
 
-function active(element) {
-  element.classList.add("focus");
-}
-function inactive(elements) {
-  elements.forEach((element) => {
-    element.classList.remove("focus");
-  });
-}
+    return sum;
+  }
+
+  function calculateBalance(income, outcome) {
+    return income - outcome;
+  }
+
+  function clearInput(inputs) {
+    inputs.forEach(function (input) {
+      if (input) {
+        input.value = "";
+      }
+    });
+  }
+
+  function clearElement(elements) {
+    elements.forEach(function (element) {
+      if (element) {
+        element.innerHTML = "";
+      }
+    });
+  }
+
+  function show(element) {
+    if (element) {
+      element.classList.remove("hide");
+    }
+  }
+
+  function hide(elements) {
+    elements.forEach(function (element) {
+      if (element) {
+        element.classList.add("hide");
+      }
+    });
+  }
+
+  function active(element) {
+    if (element) {
+      element.classList.add("focus");
+    }
+  }
+
+  function inactive(elements) {
+    elements.forEach(function (element) {
+      if (element) {
+        element.classList.remove("focus");
+      }
+    });
+  }
+
+  function buildEntryElement(doc, entry, id) {
+    const item = doc.createElement("li");
+    item.id = String(id);
+    item.className = entry.type;
+
+    const entryContent = doc.createElement("div");
+    entryContent.className = "entry";
+    entryContent.textContent = `${entry.title} : $${entry.amount}`;
+    item.appendChild(entryContent);
+
+    const editButton = doc.createElement("button");
+    editButton.type = "button";
+    editButton.id = EDIT;
+    editButton.setAttribute("aria-label", `Edit ${entry.title}`);
+    item.appendChild(editButton);
+
+    const deleteButton = doc.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.id = DELETE;
+    deleteButton.setAttribute("aria-label", `Delete ${entry.title}`);
+    item.appendChild(deleteButton);
+
+    return item;
+  }
+
+  function showEntry(list, entry, id, doc) {
+    const item = buildEntryElement(doc, entry, id);
+    list.prepend(item);
+    return item;
+  }
+
+  function getElements(doc) {
+    return {
+      balanceEl: doc.querySelector(".balance .value"),
+      incomeTotalEl: doc.querySelector(".income-total"),
+      outcomeTotalEl: doc.querySelector(".outcome-total"),
+      incomeEl: doc.querySelector("#income"),
+      expenseEl: doc.querySelector("#expense"),
+      allEl: doc.querySelector("#all"),
+      incomeList: doc.querySelector("#income .list"),
+      expenseList: doc.querySelector("#expense .list"),
+      allList: doc.querySelector("#all .list"),
+      expenseBtn: doc.querySelector(".first-tab"),
+      incomeBtn: doc.querySelector(".second-tab"),
+      allBtn: doc.querySelector(".third-tab"),
+      addExpenseButton: doc.querySelector(".add-expense"),
+      expenseTitle: doc.getElementById("expense-title-input"),
+      expenseAmount: doc.getElementById("expense-amount-input"),
+      addIncomeButton: doc.querySelector(".add-income"),
+      incomeTitle: doc.getElementById("income-title-input"),
+      incomeAmount: doc.getElementById("income-amount-input"),
+    };
+  }
+
+  function createBudgetApp(options = {}) {
+    const doc = Object.prototype.hasOwnProperty.call(options, "document")
+      ? options.document
+      : root.document;
+    const storage = options.storage || root.localStorage;
+    const updateChart =
+      typeof options.updateChart === "function" ? options.updateChart : function () {};
+    const translate =
+      typeof options.translate === "function" ? options.translate : null;
+    const alertFn =
+      typeof options.alertFn === "function" ? options.alertFn : function () {};
+
+    if (!doc) {
+      throw new Error("A document is required to initialize the budget app.");
+    }
+
+    const elements = getElements(doc);
+    let entryList = Array.isArray(options.entryList)
+      ? options.entryList.slice()
+      : loadEntries(storage);
+
+    function getValidationMessage() {
+      return translate
+        ? translate("validationError")
+        : "Please enter a valid positive amount";
+    }
+
+    function updateUI() {
+      const income = calculateTotal("income", entryList);
+      const outcome = calculateTotal("expense", entryList);
+      const balance = Math.abs(calculateBalance(income, outcome));
+      const sign = income >= outcome ? "$" : "-$";
+
+      elements.balanceEl.textContent = `${sign}${balance}`;
+      elements.outcomeTotalEl.textContent = `$${outcome}`;
+      elements.incomeTotalEl.textContent = `$${income}`;
+
+      clearElement([elements.expenseList, elements.incomeList, elements.allList]);
+
+      entryList.forEach(function (entry, index) {
+        if (entry.type === "expense") {
+          showEntry(elements.expenseList, entry, index, doc);
+        } else if (entry.type === "income") {
+          showEntry(elements.incomeList, entry, index, doc);
+        }
+
+        showEntry(elements.allList, entry, index, doc);
+      });
+
+      updateChart(income, outcome);
+      saveEntries(storage, entryList);
+
+      return {
+        income,
+        outcome,
+        balance,
+      };
+    }
+
+    function deleteEntry(entryId) {
+      entryList.splice(entryId, 1);
+      updateUI();
+    }
+
+    function editEntry(entryId) {
+      const entry = entryList[entryId];
+      if (!entry) {
+        return;
+      }
+
+      if (entry.type === "income") {
+        elements.incomeTitle.value = entry.title;
+        elements.incomeAmount.value = entry.amount;
+      } else if (entry.type === "expense") {
+        elements.expenseTitle.value = entry.title;
+        elements.expenseAmount.value = entry.amount;
+      }
+
+      deleteEntry(entryId);
+    }
+
+    function handleListClick(event) {
+      const targetButton = event.target.closest("button");
+      if (!targetButton || !targetButton.parentNode) {
+        return;
+      }
+
+      const entryId = Number(targetButton.parentNode.id);
+      if (Number.isNaN(entryId)) {
+        return;
+      }
+
+      if (targetButton.id === EDIT) {
+        editEntry(entryId);
+      } else if (targetButton.id === DELETE) {
+        deleteEntry(entryId);
+      }
+    }
+
+    function addEntry(type) {
+      const isExpense = type === "expense";
+      const titleInput = isExpense ? elements.expenseTitle : elements.incomeTitle;
+      const amountInput = isExpense
+        ? elements.expenseAmount
+        : elements.incomeAmount;
+      const validation = validateEntry(titleInput.value, amountInput.value);
+
+      if (!validation.isValid) {
+        alertFn(getValidationMessage());
+        return false;
+      }
+
+      entryList.push(createEntry(type, validation.title, validation.amount));
+      updateUI();
+      clearInput([titleInput, amountInput]);
+
+      return true;
+    }
+
+    const onExpenseTabClick = function () {
+      show(elements.expenseEl);
+      hide([elements.incomeEl, elements.allEl]);
+      active(elements.expenseBtn);
+      inactive([elements.incomeBtn, elements.allBtn]);
+    };
+
+    const onIncomeTabClick = function () {
+      show(elements.incomeEl);
+      hide([elements.expenseEl, elements.allEl]);
+      active(elements.incomeBtn);
+      inactive([elements.expenseBtn, elements.allBtn]);
+    };
+
+    const onAllTabClick = function () {
+      show(elements.allEl);
+      hide([elements.incomeEl, elements.expenseEl]);
+      active(elements.allBtn);
+      inactive([elements.incomeBtn, elements.expenseBtn]);
+    };
+
+    const onExpenseAddClick = function () {
+      addEntry("expense");
+    };
+
+    const onIncomeAddClick = function () {
+      addEntry("income");
+    };
+
+    elements.expenseBtn.addEventListener("click", onExpenseTabClick);
+    elements.incomeBtn.addEventListener("click", onIncomeTabClick);
+    elements.allBtn.addEventListener("click", onAllTabClick);
+    elements.addExpenseButton.addEventListener("click", onExpenseAddClick);
+    elements.addIncomeButton.addEventListener("click", onIncomeAddClick);
+    elements.incomeList.addEventListener("click", handleListClick);
+    elements.expenseList.addEventListener("click", handleListClick);
+    elements.allList.addEventListener("click", handleListClick);
+
+    updateUI();
+
+    return {
+      elements,
+      addEntry,
+      deleteEntry,
+      editEntry,
+      updateUI,
+      getEntryList: function () {
+        return entryList.map(function (entry) {
+          return { ...entry };
+        });
+      },
+      destroy: function () {
+        elements.expenseBtn.removeEventListener("click", onExpenseTabClick);
+        elements.incomeBtn.removeEventListener("click", onIncomeTabClick);
+        elements.allBtn.removeEventListener("click", onAllTabClick);
+        elements.addExpenseButton.removeEventListener("click", onExpenseAddClick);
+        elements.addIncomeButton.removeEventListener("click", onIncomeAddClick);
+        elements.incomeList.removeEventListener("click", handleListClick);
+        elements.expenseList.removeEventListener("click", handleListClick);
+        elements.allList.removeEventListener("click", handleListClick);
+      },
+    };
+  }
+
+  function initBudgetApp(options = {}) {
+    return createBudgetApp(options);
+  }
+
+  return {
+    DELETE,
+    EDIT,
+    active,
+    buildEntryElement,
+    calculateBalance,
+    calculateTotal,
+    clearElement,
+    clearInput,
+    createBudgetApp,
+    createEntry,
+    hide,
+    inactive,
+    initBudgetApp,
+    loadEntries,
+    saveEntries,
+    show,
+    showEntry,
+    validateEntry,
+  };
+});
