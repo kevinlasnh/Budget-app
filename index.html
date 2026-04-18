@@ -6,8 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Budget Web App | javascript</title>
     <link href="./style.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@3.0.1/dist/cookieconsent.css">
   </head>
   <body>
+    <!-- Language Switcher -->
+    <div class="language-switcher">
+      <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
+      <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')">中文</button>
+    </div>
+
     <div class="budget-container">
       <div class="app-title">
         <a href="">Budget<b>App</b></a>
@@ -89,6 +96,15 @@
         </div>
       </div>
     </div>
+
+    <!-- Footer with Privacy Policy Link -->
+    <footer class="footer">
+      <a href="privacy-policy.html">Privacy Policy</a>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@3.0.1/dist/cookieconsent.umd.js"></script>
+    <script src="./cookie-config.js"></script>
+    <script src="./i18n.js"></script>
     <script src="./chart.js"></script>
     <script src="./budget.js"></script>
   </body>
