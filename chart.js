@@ -3,8 +3,14 @@ const chartEl = document.querySelector(".chart");
 
 // CREATE CANVAS ELEMENT
 const canvas = document.createElement("canvas");
-canvas.width = 50;
-canvas.height = 50;
+const CANVAS_SIZE = 50;
+const LINE_WIDTH = 8;
+const CIRCLE_RADIUS = 20;
+
+canvas.width = CANVAS_SIZE;
+canvas.height = CANVAS_SIZE;
+canvas.setAttribute('role', 'img');
+canvas.setAttribute('aria-label', 'Income vs Expense chart');
 
 chartEl.appendChild(canvas);
 
@@ -12,10 +18,10 @@ chartEl.appendChild(canvas);
 const ctx = canvas.getContext("2d");
 
 // CHANGE LINE WIDTH
-ctx.lineWidth = 8;
+ctx.lineWidth = LINE_WIDTH;
 
 // CIRCLE RADIUS
-const R = 20;
+const R = CIRCLE_RADIUS;
 
 function drawCircle(color, ratio, anticlockwise) {
   ctx.strokeStyle = color;
@@ -38,4 +44,7 @@ function updateChart(income, outcome) {
 
   drawCircle("#FFF", -ratio, true);
   drawCircle("#F0624D", 1 - ratio, false);
+
+  // Update aria-label with current values
+  canvas.setAttribute('aria-label', `Income $${income} vs Expense $${outcome}`);
 }
