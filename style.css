@@ -101,7 +101,7 @@ input[type="number"] {
 
 .budget-header .account .income .title {
   color: #fff;
-  opacity: 0.5;
+  opacity: 0.8;
 }
 .budget-header .account .income .income-total {
   color: #fff;
@@ -110,7 +110,7 @@ input[type="number"] {
 
 .budget-header .account .outcome .title {
   color: #fff;
-  opacity: 0.5;
+  opacity: 0.8;
 }
 .budget-header .account .outcome .outcome-total {
   color: #f0624d;
@@ -434,4 +434,43 @@ input[type="number"] {
   background-image: url("icon/trash.png");
   background-size: 20px 20px;
   background-repeat: no-repeat;
+}
+
+/* Style for label elements */
+.input label {
+  display: block;
+  color: #fff;
+  font-size: 0.9em;
+  margin-bottom: 0.3em;
+  margin-top: 0.5em;
+}
+
+/* Change div.add-expense and div.add-income to button */
+.add-expense,
+.add-income {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-expense:hover,
+.add-income:hover {
+  opacity: 0.8;
+}
+
+/* Style for edit and delete buttons */
+#edit,
+#delete {
+  cursor: pointer;
+  background-size: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
+  padding: 0;
+  width: 1.4em;
+  height: 1.4em;
 }
